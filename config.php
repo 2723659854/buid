@@ -19,4 +19,7 @@ return [
     $my_7_map_md_file = '7.map.md',
     /** ui设计图地址 */
     $Ui_url = 'https://lanhuapp.com/web/#/item/project/stage?tid=a630f115-d831-4d41-aee9-7921bfe745b0&pid=2d7b1c3e-52fb-4502-9c87-2a425c5265ac',
+    /** MNS队列前缀配置 */
+    $MnsPrefixs = ['dompat_rupiah_ios' => 'id01-creditfundios-',],
+
 ];

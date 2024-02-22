@@ -62,7 +62,7 @@ if (!function_exists('replaceFile')) {
 }
 
 /** 加载配置文件 */
-list($docProjectPath, $targetProject, $docName, $smallAppName, $filedMapAppName, $scheme, $h5_dev_file, $my_7_map_md_file,$UI_url) = require_once __DIR__ . '/config.php';
+list($docProjectPath, $targetProject, $docName, $smallAppName, $filedMapAppName, $scheme, $h5_dev_file, $my_7_map_md_file,$UI_url,$MnsPrefixs) = require_once __DIR__ . '/config.php';
 
 
 /** 生成7.map.md的内容 */
@@ -545,8 +545,28 @@ if (file_put_contents($envFile, $envFileContent)) {
 } else {
     echo "创建文件{$envFile}失败\r\n";
 }
-echo "请人工验证修改的文件是否正确。\r\n 
-还需要手动修改队列的前缀common\\enums\MnsQueueName.php，\r\n 
+
+/** 修改枚举类型文件common/enums/MnsQueueName.php  */
+
+$MnsQueueNameStart = <<<eof
+<?php
+
+namespace common\enums;
+eof;
+
+$MnsQueueNameEnd = <<<eof
+defined('MNS_QUEUE_PREFIX') or define('MNS_QUEUE_PREFIX', \$prefixs[APP_NAME]);
+eof;
+
+$MnsQueueNameReplace = <<<eof
+
+    \$prefixs = $MnsPrefixs;
+
+eof;
+
+replaceFile($targetProject,'common/enums/MnsQueueName.php',$MnsQueueNameStart,$MnsQueueNameEnd,$MnsQueueNameReplace);
+
+echo "请人工验证修改的文件是否正确。\r\n  
 真假产品common/models/merchant/MerchantProduct.php ,\r\n
 environments/prod的数据库，接口，日志，oss配置，\r\n
 global-php的枚举类型 \r\n";
