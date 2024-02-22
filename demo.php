@@ -14,8 +14,9 @@ class Location {
 
     /**
      * 根据地名获取经纬度
-     * @param string $name 中文地名
-     * @return bool|string
+     * @param string $name
+     * @return array|mixed
+     * @throws Exception
      */
     public function getLocationByName (string $name = '北京市海淀区上地十街10号'){
         // 构造请求参数
@@ -23,7 +24,12 @@ class Location {
         $param['output']   = 'json';
         $param['ak']   = $this->ak;
         $param['callback']   = 'showLocation';
-        return $this->request_get($this->url, $param) ;
+        $res =  $this->request_get($this->url, $param) ;
+        $start = strpos($res,'(')+1;
+        $end = strpos($res,')');
+        $string = substr($res,$start,$end-$start);
+        $back  =json_decode($string,true);
+        return $back??[];
     }
 
     /**
@@ -59,5 +65,7 @@ class Location {
 
 /** 调用 */
 $class = new Location();
-var_dump($res = $class->getLocationByName('北京市海淀区上地十街10号'));
+$res = $class->getLocationByName('北京市海淀区上地十街10号');
+
+var_dump($res);
 ?>
