@@ -36,7 +36,7 @@ if (!function_exists('replaceFile')) {
      * @param string $endContent 需要修改的文件内容结束
      * @param string $newReplaceContent 替换的新数据
      */
-    function replaceFile( string $targetProject, string $targetFile, string $startContent, string $endContent,  string $newReplaceContent )
+    function replaceFile(string $targetProject, string $targetFile, string $startContent, string $endContent, string $newReplaceContent)
     {
         /** 需要修改的文件 */
         $urlServiceFile = $targetProject . '/' . $targetFile;
@@ -52,35 +52,21 @@ if (!function_exists('replaceFile')) {
         /** 生成新的content内容 */
         $newContent = str_replace($word, $newReplaceContent, $content);
         /** 写入文件 */
-        if(file_put_contents($urlServiceFile, $newContent)){
+        if (file_put_contents($urlServiceFile, $newContent)) {
             echo "替换{$targetFile}成功\r\n";
-        }else{
+        } else {
             echo "替换{$targetFile}失败\r\n";
         }
 
     }
 }
 
-/** 配置文件 */
-/** 文档目录 */
-$docProjectPath = dirname(__DIR__) . '/app-api-doc';
-/** 项目目录 */
-$targetProject = dirname(__DIR__) . '/code/Indo3/bagus-cash-ios-dc';
-/** 项目文档目录名称 */
-$docName = 'in_rupiya_loan_ios';
-/** app名称小写 */
-$smallAppName = "rupiya_loan_ios";
-/** filed_map 文件用到的app变量 */
-$filedMapAppName = 'rupiya-loan';
-/** 协议 */
-$scheme = "in://rupiya.loan.ios/";
-/** 生成的h5的接口文档文件名称 */
-$h5_dev_file = '1500.ph_peso_pocket_ios.md';
-/** 7.map.md文件的名称 */
-$my_7_map_md_file = '7.map.md';
+/** 加载配置文件 */
+list($docProjectPath, $targetProject, $docName, $smallAppName, $filedMapAppName, $scheme, $h5_dev_file, $my_7_map_md_file,$UI_url) = require_once __DIR__ . '/config.php';
+
 
 /** 生成7.map.md的内容 */
-$fieldsData = require_once $docProjectPath.'/docs/'.$docName.'/fields_map.php';
+$fieldsData = require_once $docProjectPath . '/docs/' . $docName . '/fields_map.php';
 /** 获取混淆数组的值 */
 $array = array_values($fieldsData);
 
@@ -92,7 +78,7 @@ $h5_dev_content = <<<eof
 ### 基本信息：
 
 > - 文档地址：https://doc.alta-dg.mx/{$docName}/
-> - ui 地址: https://lanhuapp.com/web/#/item/project/stage?tid=a630f115-d831-4d41-aee9-7921bfe745b0&pid=2d7b1c3e-52fb-4502-9c87-2a425c5265ac
+> - ui 地址: {$UI_url}
 > - 原生 scheme： {$scheme}
 > - 原生产品 id： 'product_id' => '{$fieldsData['product_id']}',
 
@@ -154,15 +140,15 @@ $h5_dev_content = <<<eof
 ```
 
 eof;
-$h5_dev_file = $docProjectPath.'/docs/h5-dev/'.$h5_dev_file;
-if (file_put_contents($h5_dev_file,$h5_dev_content)){
+$h5_dev_file = $docProjectPath . '/docs/h5-dev/' . $h5_dev_file;
+if (file_put_contents($h5_dev_file, $h5_dev_content)) {
     echo "创建文件{$h5_dev_file}成功\r\n";
-}else{
+} else {
     echo "创建文件{$h5_dev_file}失败\r\n";
 }
 
 
-/** 生成7map的内容 */
+/** 生成 7.map.md 的内容 */
 $map_7_md = <<<eof
 ## 7. 值映射
 
@@ -272,27 +258,15 @@ xx://xxxx/productDetail?product_id=2    产品详情
 }
 eof;
 
-$map_7_md_file = $docProjectPath.'/docs/'.$docName.'/'.$my_7_map_md_file;
-if (file_put_contents($map_7_md_file,$map_7_md)){
+$map_7_md_file = $docProjectPath . '/docs/' . $docName . '/' . $my_7_map_md_file;
+if (file_put_contents($map_7_md_file, $map_7_md)) {
     echo "创建文件{$map_7_md_file}成功\r\n";
-}else{
+} else {
     echo "创建文件{$map_7_md_file}失败\r\n";
 }
 
 /** 修改文件 common/services/UrlService.php 修改方法public static function getAppPageUrl（） 里面的pagesMap数组 */
 
-$getAppPageUrlReplace = <<<eof
-\$pagesMap = [
-            'main' => '{$array[12]}',     //首页
-            'setting' => '{$array[13]}',   //设置
-            'login' => '{$array[14]}',     //登录
-            'order' => '{$array[15]}',          //订单
-            'productDetail' => '{$array[16]}',    //产品详情
-            'coupon' => 'coupon',    //优惠券
-            'certify'=>'equalled'  //认证列表
-        ];
-eof;
-/** 开始处 */
 $getAppPageUrlStart = <<<eof
     public static function getAppPageUrl(\$page, \$params = [])
     {
@@ -316,7 +290,22 @@ $getAppPageUrlEnd = <<<eof
 
 eof;
 
-replaceFile($targetProject,'common/services/UrlService.php',$getAppPageUrlStart,$getAppPageUrlEnd,$getAppPageUrlReplace);
+$getAppPageUrlReplace = <<<eof
+
+\$pagesMap = [
+            'main' => '{$array[12]}',     //首页
+            'setting' => '{$array[13]}',   //设置
+            'login' => '{$array[14]}',     //登录
+            'order' => '{$array[15]}',          //订单
+            'productDetail' => '{$array[16]}',    //产品详情
+            'coupon' => 'coupon',    //优惠券
+            'certify'=>'equalled'  //认证列表
+        ];
+        
+eof;
+
+
+replaceFile($targetProject, 'common/services/UrlService.php', $getAppPageUrlStart, $getAppPageUrlEnd, $getAppPageUrlReplace);
 
 /** 修改 common/services/thirdapi/CertifyService.php 修改方法public static function replaceCate（）方法 的 $replaceNow数组*/
 
@@ -348,7 +337,7 @@ $CertifyServiceReplace = <<<eof
         
 eof;
 
-replaceFile($targetProject,'common/services/thirdapi/CertifyService.php',$CertifyServiceStart,$CertifyServiceEnd,$CertifyServiceReplace);
+replaceFile($targetProject, 'common/services/thirdapi/CertifyService.php', $CertifyServiceStart, $CertifyServiceEnd, $CertifyServiceReplace);
 
 /** 然后修改文件frontend/controllers/v3/ProductController.php 修改方法public static function replaceCate（） */
 
@@ -365,7 +354,7 @@ public static function replaceCate(array \$data): array
         ];
 eof;
 
-$ProductControllerEnd =<<<eof
+$ProductControllerEnd = <<<eof
        \$str = str_replace(\$replaceOrg, \$replaceNow, \$str);
         return json_decode(\$str, true);
     }
@@ -383,7 +372,7 @@ $ProductControllerReplace = <<<eof
         
 eof;
 
-replaceFile($targetProject,'frontend/controllers/v3/ProductController.php',$ProductControllerStart,$ProductControllerEnd, $ProductControllerReplace);
+replaceFile($targetProject, 'frontend/controllers/v3/ProductController.php', $ProductControllerStart, $ProductControllerEnd, $ProductControllerReplace);
 
 /** 修改文件frontend/controllers/v4/IndexController.php 修改方法public static function replaceCate（） */
 
@@ -415,7 +404,7 @@ $IndexControllerReplace = <<<eof
         
 eof;
 
-replaceFile($targetProject,'frontend/controllers/v4/IndexController.php',$IndexControllerStart,$IndexControllerEnd,$IndexControllerReplace);
+replaceFile($targetProject, 'frontend/controllers/v4/IndexController.php', $IndexControllerStart, $IndexControllerEnd, $IndexControllerReplace);
 
 
 /** 修改文件 common/services/UrlService.php 修改方法public static function getH5PageUrl(） */
@@ -462,10 +451,11 @@ $UrlServiceGetH5PageUrlReplace = <<<eof
 
 eof;
 
-replaceFile($targetProject,'common/services/UrlService.php',$UrlServiceGetH5PageUrlStart,$UrlServiceGetH5PageUrlEnd,$UrlServiceGetH5PageUrlReplace);
+replaceFile($targetProject, 'common/services/UrlService.php', $UrlServiceGetH5PageUrlStart, $UrlServiceGetH5PageUrlEnd, $UrlServiceGetH5PageUrlReplace);
 
 
-/** 接下来迁移 混淆数组文件 */
+/** 接下来迁移 混淆数组fields_map文件 */
+
 
 $originFieldFileContent = <<<eof
 <?php
@@ -490,22 +480,22 @@ foreach (\$_POST as \$key => \$value) {
 }
 
 eof;
-$originFieldFile = $targetProject.'/frontend/config/maps/'.$smallAppName.'.php';
-if (file_put_contents($originFieldFile,$originFieldFileContent)){
+$originFieldFile = $targetProject . '/frontend/config/maps/' . $smallAppName . '.php';
+if (file_put_contents($originFieldFile, $originFieldFileContent)) {
     echo "创建文件{$originFieldFile}完成\r\n";
-}else{
+} else {
     echo "创建文件{$originFieldFile}失败\r\n";
 }
-$targetFieldsDataFile = $targetProject.'/frontend/config/maps/'.$smallAppName.'-fields_map.php';
-$contentField = file_get_contents($docProjectPath.'/docs/'.$docName.'/fields_map.php');
-if (file_put_contents($targetFieldsDataFile,$contentField)){
+$targetFieldsDataFile = $targetProject . '/frontend/config/maps/' . $smallAppName . '-fields_map.php';
+$contentField = file_get_contents($docProjectPath . '/docs/' . $docName . '/fields_map.php');
+if (file_put_contents($targetFieldsDataFile, $contentField)) {
     echo "创建文件{$targetFieldsDataFile}成功\r\n";
-}else{
+} else {
     echo "创建文件{$targetFieldsDataFile}失败\r\n";
 }
 /** 迁移路由文件 */
 
-$targetLoadFile = $targetProject.'/frontend/config/url_rules/load.php';
+$targetLoadFile = $targetProject . '/frontend/config/url_rules/load.php';
 $loadFileContent = <<<eof
 <?php
 \$url_rules = require __DIR__ . '/default.php';
@@ -515,14 +505,14 @@ if (file_exists(__DIR__ . '/' . APP_NAME . '.php')) {
 }
 return \$url_rules;
 eof;
-if (file_put_contents($targetLoadFile,$loadFileContent)){
+if (file_put_contents($targetLoadFile, $loadFileContent)) {
     echo "创建{$targetLoadFile}成功\r\n";
-}else{
+} else {
     echo "创建{$targetLoadFile}成功\r\n";
 }
 
-$targetUrlFile = $targetProject.'/frontend/config/url_rules/'.$smallAppName.'.php';
-$targetUrlContent = require_once $docProjectPath.'/docs/'.$docName.'/url_map.php';
+$targetUrlFile = $targetProject . '/frontend/config/url_rules/' . $smallAppName . '.php';
+$targetUrlContent = require_once $docProjectPath . '/docs/' . $docName . '/url_map.php';
 
 $targetUrlContent = <<<eof
 <?php
@@ -534,14 +524,14 @@ $targetUrlContent
 return array_flip(\$map);
 eof;
 
-if (file_put_contents($targetUrlFile,$targetUrlContent)){
+if (file_put_contents($targetUrlFile, $targetUrlContent)) {
     echo "创建{$targetUrlFile}成功\r\n";
-}else{
-    echo "创建{$targetUrlFile}成功\r\n";
+} else {
+    echo "创建{$targetUrlFile}失败\r\n";
 }
 
 /** 修改env.example.php文件 */
-$envFile = $targetProject.'/env.example.php';
+$envFile = $targetProject . '/env.example.php';
 $envFileContent = <<<eof
 <?php
 defined('ENV') OR define('ENV', 'prod');//本地开发 dev, 测试 test 生产prod
@@ -550,12 +540,18 @@ define('APP_NAME', '{$smallAppName}');
 define('OLD_APP_NAME', '{$smallAppName}');
 define('NEED_CONNECT_OLD_APP', true);
 eof;
-if (file_put_contents($envFile,$envFileContent)){
+if (file_put_contents($envFile, $envFileContent)) {
     echo "创建文件{$envFile}成功\r\n";
-}else{
-    echo "创建文件{$envFile}成功\r\n";
+} else {
+    echo "创建文件{$envFile}失败\r\n";
 }
-echo "还需要手动修改队列的前缀，真假产品,environments/prod的配置\r\n";
+echo "请人工验证修改的文件是否正确。\r\n 
+还需要手动修改队列的前缀common\\enums\MnsQueueName.php，\r\n 
+真假产品common/models/merchant/MerchantProduct.php ,\r\n
+environments/prod的数据库，接口，日志，oss配置，\r\n
+global-php的枚举类型 \r\n";
+
+echo "注意修改h5_dev的开发文档{$h5_dev_file}里面的确认用款页的接口地址，用户账号，联调值的orderId\r\n";
 
 
 
