@@ -62,9 +62,13 @@ if (!function_exists('replaceFile')) {
 }
 
 /** 加载配置文件 */
-list($docProjectPath, $targetProject, $docName, $smallAppName, $filedMapAppName, $scheme, $h5_dev_file, $my_7_map_md_file,$UI_url,$MnsPrefixs) = require_once __DIR__ . '/config.php';
+list($docProjectPath, $targetProject, $docName,  $scheme, $h5_dev_file, $my_7_map_md_file,$UI_url,$MnsPrefixs,$clientType) = require_once __DIR__ . '/config.php';
 
-
+$docName_array = explode('_',$docName);
+/** 应用市场 */
+$appMarket = $docName_array[1].'-'.$docName_array[2];
+/** 应用名称小写 */
+$smallAppName = $docName_array[1].'_'.$docName_array[2].'_'.$docName_array[2];
 /** 生成7.map.md的内容 */
 $fieldsData = require_once $docProjectPath . '/docs/' . $docName . '/fields_map.php';
 /** 获取混淆数组的值 */
@@ -469,8 +473,8 @@ foreach (\$_GET as \$key => \$value) {
     }
 }
 
-\$_GET['appMarket'] = '{$filedMapAppName}';
-\$_GET['clientType'] = 'ios';
+\$_GET['appMarket'] = '{$appMarket}';
+\$_GET['clientType'] = '{$clientType}';
 
 foreach (\$_POST as \$key => \$value) {
     if (in_array(\$key, \$map)) {
