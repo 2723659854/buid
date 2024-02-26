@@ -130,7 +130,7 @@ class GelunPayService
     public $incomeNotifyUrl = 'https://378d0a5c.r23.cpolar.top/income-notify';
 
     /** 汇款支付通知地址 */
-    public $outcomeNotifyUrl = 'https://378d0a5c.r23.cpolar.top/outcome-notify';
+    public $outcomeNotifyUrl = 'https://378d0a5c.r23.cpolar.top/income-notify';
 
     /**
      * 初始化，直接获取token
@@ -418,7 +418,7 @@ class GelunPayService
             "phone" => "3211234567",
             "identity_type" => "CC",
             "identity_number" => "3215545610",
-            "notify_url" => "https://sanbox-openapi-co.eastpay.top/gateway/test/notify",
+            "notify_url" => $this->outcomeNotifyUrl,
             "transfer_desc" => "Test Transfer"
         ];
 
@@ -461,10 +461,10 @@ class GelunPayService
 /** 测试 */
 $class = new GelunPayService();
 
-print_r($incomeOrder = $class->createIncomePay());
+//print_r($incomeOrder = $class->createIncomePay());
 
 //print_r($class->queryIncomeOrder());
-//print_r($class->makeOutcomePay());
+print_r($class->makeOutcomePay());
 //print_r($class->queryOutcomeOrder());
 
 
