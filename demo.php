@@ -358,17 +358,14 @@ class GelunPayService
         if (empty($params)) return false;
         $signature = $params['signature'] ?? '';
         ksort($params);
-        $stringArray = [];
         $string = '';
         foreach ($params as $key => $value) {
             if ($key != 'signature'){
                 if (is_float($value)){
                     $value = sprintf('%.2f', $value);
                 }
-                $stringArray[]=$key.'='.$value;
                 $string .=$key.'='.$value.'&';
             }
-
         }
         $string = trim($string,'&');
         $sign =  base64_encode(hash_hmac('sha512', $string, $this->apiSecret,true));
