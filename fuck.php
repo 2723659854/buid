@@ -1,6 +1,12 @@
 <?php
-
-class GelunPayService
+/**
+ * @purpose 哥伦支付
+ * @author yanglong
+ * @time 2024年2月27日09:44:23
+ * @example 查询进账单状态 (new GelunPayService())->queryIncomeOrder('562b640985bbf4fb7363952a62e54125');
+ * @link https://docs-co.eastpay.top/web/#/621007049/278348530
+ */
+class GelunPayService2
 {
 
     /** 返回码  */
@@ -107,6 +113,8 @@ class GelunPayService
 
     /** 商户id */
     public $merchantId = "MSF20240225222121003";
+    /** 正式环境 */
+    //public $merchantId = "MSF20240227040532003";
 
     /** 加密公钥 */
     private $publicKey = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzP6Gp6B/cAmeNpiNcAFnlzIiBcxNM9FpgZiVT7aTF4gmBYvP9+QlNE0591Bim169LwYYDWd2xofSmaFkOtQuaRRk3FmlVz2arodvahQ2XZQXk88oaSO2VdcigWctRxTw+x2hzZj+IdqmlUC1BHIPVlJ/ED96Zu7I2NWPgHQ/WaTGvk/aqdw4AcxbOJAg7efSXyru2NhY/F81vCuYTpRIHQHaRxmn4Pp+5eHjypGBLXkHNIOZ8gjBFtzfJ2NAnuCgYSHlRHi7RuIY+x4rQGKN/8ZhvrN9KXSnDH1/U8cQ9yOrzO0JaUJyc1QUOf7z3gOe18Avo/6qVTZMAYqVQD57ywIDAQAB";
@@ -116,6 +124,8 @@ class GelunPayService
 
     /** api秘钥 */
     public $apiSecret = "1e7bf5c0-479d-4936-a720-c6b32fe4243a";
+    /** 正式环境 */
+    //public $apiSecret = "2fb39185-2306-4678-819c-72f91684e056";
 
     /** 缓存token */
     private $accessToken = '';
@@ -135,7 +145,9 @@ class GelunPayService
     /**
      * 初始化，直接获取token
      * GelunPayService constructor.
-     * @throws Exception
+     * @throws \Exception
+     * @author yanglong
+     * @time 2024年2月27日09:44:36
      */
     public function __construct()
     {
@@ -148,14 +160,16 @@ class GelunPayService
      * @param array $postFields body参数
      * @param array $headers header参数
      * @return array|mixed 返回值
+     * @author yanglong
+     * @time 2024年2月27日09:44:36
      */
     public function request(string $url, array $postFields, array $headers = [])
     {
 
         /** 不同环境使用不同的baseUrl */
-        if (self::$env=='dev'){
+        if (self::$env == 'dev') {
             $url = $this->devRequestUrl . $url;
-        }else{
+        } else {
             $url = $this->proRequestUrl . $url;
         }
         $ch = curl_init();
@@ -164,7 +178,7 @@ class GelunPayService
         curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4); //若果报错 name lookup timed out 报错时添加这一行代码
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postFields, JSON_UNESCAPED_UNICODE));
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postFields, JSON_UNESCAPED_UNICODE));/** 必须给对方传递json字符串才可以接收 */
         curl_setopt($ch, CURLOPT_TIMEOUT, 60);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
@@ -172,7 +186,7 @@ class GelunPayService
         curl_close($ch);
         if (!$res) {
             $errorMsg = curl_errno($ch) . '-' . curl_error($ch);
-            //Yii::info('支付失败信息'.$errorMsg,'appInfo');
+            //Yii::info('哥伦支付失败信息' . $errorMsg, 'appInfo');
             return ['code' => "-1", 'message' => $errorMsg];
         } else {
             return json_decode($res, true);
@@ -181,9 +195,12 @@ class GelunPayService
 
     /**
      * 生成获取token的签名
-     *
+     * @return array
+     * @author yanglong
+     * @time 2024年2月27日09:44:36
+     * @link https://docs-co.eastpay.top/web/#/621007049/278348532
      */
-    public function makeTokenSignature()
+    public function makeTokenSignature(): array
     {
         $timestamp = $this->getTimestamp();
         $strToSign = $this->merchantId . '|' . $timestamp;
@@ -194,10 +211,12 @@ class GelunPayService
      * sha256加密
      * @param string $content
      * @return string
+     * @author yanglong
+     * @time 2024年2月27日09:44:36
      */
-    public function getSHA256Sign(string $content)
+    public function getSHA256Sign(string $content): string
     {
-        $privateKey = "-----BEGIN RSA PRIVATE KEY-----\n" . wordwrap($this->privateKey, 64, "\n", true) .  "\n-----END RSA PRIVATE KEY-----";
+        $privateKey = "-----BEGIN RSA PRIVATE KEY-----\n" . wordwrap($this->privateKey, 64, "\n", true) . "\n-----END RSA PRIVATE KEY-----";
         $key = openssl_get_privatekey($privateKey);
         openssl_sign($content, $signature, $key, "SHA256");
         openssl_free_key($key);
@@ -224,55 +243,32 @@ class GelunPayService
     /**
      * 获取毫秒时间戳
      * @return int
+     * @author yanglong
+     * @time 2024年2月27日09:44:36
      */
-    public function getTimestamp():int
+    public function getTimestamp(): int
     {
         list($msec, $sec) = explode(' ', microtime());
         $msectime = (float)sprintf('%.0f', (floatval($msec) + floatval($sec)) * 1000);
         return substr($msectime, 0, 13);
     }
 
-
-    /**
-     * 使用私钥加密
-     * @param $data
-     * @return string
-     */
-    public function privateRSAEncrypt($data)
-    {
-        $platforPrivateKey = '-----BEGIN PRIVATE KEY-----' . "\n" . $this->privateKey . "\n" . '-----END PRIVATE KEY-----';
-        $piKey = openssl_pkey_get_private($platforPrivateKey);
-        openssl_private_encrypt($data, $encryptData, $piKey);
-        return base64_encode($encryptData);
-    }
-
-    /**
-     * 使用公钥解密
-     * @param $data
-     * @return mixed
-     */
-    public function publicRSADecrypt($data)
-    {
-        $publicKey = '-----BEGIN PUBLIC KEY-----' . "\n" . $this->publicKey . "\n" . '-----END PUBLIC KEY-----';
-        $data = base64_decode($data);
-        $puKey = openssl_pkey_get_public($publicKey);
-        openssl_public_decrypt($data, $decryptData, $puKey);
-        return $decryptData;
-    }
-
     /**
      * 获取token
-     * @throws Exception
+     * @throws \Exception
+     * @author yanglong
+     * @time 2024年2月27日09:44:36
+     * @link https://docs-co.eastpay.top/web/#/621007049/278348534
      */
     public function getToken()
     {
         $url = '/gateway/v1.0/access-token';
         $sign = $this->makeTokenSignature();
         $headers = [
-            'X-TIMESTAMP:'.$sign['timestamp'],
-            'X-MERCHANT-ID:' .$this->merchantId,
+            'X-TIMESTAMP:' . $sign['timestamp'],
+            'X-MERCHANT-ID:' . $this->merchantId,
             'X-SIGNATURE:' . $sign['sign'],
-            'Content-Type:'.'application/json',
+            'Content-Type:' . 'application/json',
         ];
         $res = $this->request($url, ['grant_type' => 'client_credentials'], $headers);
 
@@ -281,37 +277,53 @@ class GelunPayService
             $this->tokenType = $res['token_type'];
             $this->expiresIn = $res['expires_in'];
         } else {
-            throw new Exception($res['message']);
+            throw new \Exception($res['message']);
         }
     }
 
     /**
      * 生成订单号
      * @return string
+     * @author yanglong
+     * @time 2024年2月27日09:44:36
      */
-    public static function makeOrder():string{
-        return md5(time().uniqid());
+    public static function makeOrder(): string
+    {
+        return md5(time() . uniqid());
     }
 
     /**
      * 创建进账单
+     * @param string $method 支付方式 'Pse'
+     * @param float $amount 账单金额 199.88
+     * @param string $customer_name 客户名称 'Jack Test'
+     * @param string $email 客户邮箱 'test@gmail.com'
+     * @param string $phone 客户手机号，要求10位纯数字 '3211234567'
+     * @param string $identity_type 客户证件号类型 'CC'
+     * @param string $identity_number 客户证件号 '3215545610'
+     * @param string $expiry_time 过期时间，形如：yyyy-MM-dd HH:mm:ss '2024-12-21 18:00:00'
+     * @param string|null 付款成功通知地址 $notify_url
+     * @param string $product_desc 商品描述 'Test pay'
      * @return array|mixed|string[]
+     * @author yanglong
+     * @time 2024年2月27日09:44:36
+     * @link https://docs-co.eastpay.top/web/#/621007049/278348538
      */
-    public function createIncomePay()
+    public function createIncomePay(string $method, float $amount, string $customer_name, string $email, string $phone, string $identity_type, string $identity_number, string $expiry_time, ?string $notify_url, string $product_desc)
     {
         $url = '/gateway/v1.0/payIn/create-bill';
         $params = [
-            'method' => 'Pse',
-            'partner_trx_id' => $orderSn=self::makeOrder(),
-            'amount' => 199.88,
-            'customer_name' => 'Jack Test',
-            'email' => 'test@gmail.com',
-            'phone' => '3211234567',
-            'identity_type' => 'CC',
-            'identity_number' => '3215545610',
-            'expiry_time' => '2024-12-21 18:00:00',
-            'notify_url' => $this->incomeNotifyUrl,
-            'product_desc' => 'Test pay'
+            'method' => $method,
+            'partner_trx_id' => $orderSn = self::makeOrder(),
+            'amount' => sprintf('%.2f', $amount),
+            'customer_name' => $customer_name,
+            'email' => $email,
+            'phone' => $phone,
+            'identity_type' => $identity_type,
+            'identity_number' => $identity_number,
+            'expiry_time' => $expiry_time,
+            'notify_url' =>  $notify_url??$this->outcomeNotifyUrl ,
+            'product_desc' => $product_desc
         ];
 
         $sign = $this->generateSign($url, $params);
@@ -324,7 +336,7 @@ class GelunPayService
         ];
         $data = $this->request($url, $params, $headers);
 
-        if (self::$env=='dev'){
+        if (self::$env == 'dev') {
             $this->modeNotify($orderSn);
         }
         return $data;
@@ -332,11 +344,15 @@ class GelunPayService
 
     /**
      * 模拟支付成功和失败
-     * @param string $orderSn
+     * @param string $orderSn 'def4bb5e12c0f474e98dd7e959e46926'
      * @param string $type BILL/CASH
      * @return array|mixed|string[]
+     * @author yanglong
+     * @time 2024年2月27日09:44:36
+     * @link https://docs-co.eastpay.top/web/#/621007049/278348535
+     * @note 支付和汇款在测试的时候需要配置通知地址income_notify_url，创建订单成功后，调用本接口模拟用户支付成功，第三方支付会发送异步通知到配置的异步通知地址income_notify_url
      */
-    public function modeNotify(string $orderSn,string $type = 'BILL')
+    public function modeNotify(string $orderSn, string $type = 'BILL')
     {
 
         $url = "/gateway/test/simulation";
@@ -351,24 +367,29 @@ class GelunPayService
 
     /**
      * 校验签名
+     * @param array $params
      * @return bool
+     * @author yanglong
+     * @time 2024年2月27日09:44:36
+     * @note 用于异步通知（进账和汇款）的签名校验
+     * @link https://docs-co.eastpay.top/web/#/621007049/278348539
      */
-    public function checkSign(array $params):bool
+    public function checkSign(array $params): bool
     {
         if (empty($params)) return false;
         $signature = $params['signature'] ?? '';
         ksort($params);
         $string = '';
         foreach ($params as $key => $value) {
-            if ($key != 'signature'){
-                if (is_float($value)){
+            if ($key != 'signature') {
+                if (is_float($value)) {
                     $value = sprintf('%.2f', $value);
                 }
-                $string .=$key.'='.$value.'&';
+                $string .= $key . '=' . $value . '&';
             }
         }
-        $string = trim($string,'&');
-        $sign =  base64_encode(hash_hmac('sha512', $string, $this->apiSecret,true));
+        $string = trim($string, '&');
+        $sign = base64_encode(hash_hmac('sha512', $string, $this->apiSecret, true));
         if ($sign == $signature) {
             return true;
         }
@@ -377,10 +398,13 @@ class GelunPayService
 
     /**
      * 查询进账单状态
-     * @param string $orderSn
+     * @param string $orderSn 'def4bb5e12c0f474e98dd7e959e46926'
      * @return array|mixed|string[]
+     * @author yanglong
+     * @time 2024年2月27日09:44:36
+     * @link https://docs-co.eastpay.top/web/#/621007049/278348540
      */
-    public function queryIncomeOrder(string $orderSn = 'def4bb5e12c0f474e98dd7e959e46926')
+    public function queryIncomeOrder(string $orderSn)
     {
         $url = '/gateway/v1.0/payIn/inquiry';
         $params = [
@@ -401,28 +425,47 @@ class GelunPayService
 
     /**
      * 发起汇款
+     * @param float $amount 汇款金额 10000.00
+     * @param int $charging_fees_method 手续费收取方式：0 - 汇款手续费从汇款金额中扣除，1 - 汇款手续费从商户余额中扣除 1
+     * @param string $recipient_bank_code 收款银行代码 "1007"
+     * @param int $recipient_account_type 收款账号类型，0 - AHORRO 储蓄（常用的支付方式： nequi、rappipay、daviplata 账户类型均为储蓄），1 - CORRIENTE 活期 0
+     * @param string $recipient_account 收款账号 "5414515151"
+     * @param string $recipient_account_name 收款账号名称 "Jack Test"
+     * @param string $email 收款人邮箱 "test@gmail.com"
+     * @param string $phone 收款人手机号，要求10位纯数字 "3211234567"
+     * @param string $identity_type 客户证件号类型 "CC"
+     * @param string $identity_number 客户证件号 "3215545610"
+     * @param string|null  $notify_url 付款成功通知地址
+     * @param string $transfer_desc 转账描述 "Test Transfer"
      * @return array|mixed|string[]
+     * @author yanglong
+     * @time 2024年2月27日09:44:36
+     * @link https://docs-co.eastpay.top/web/#/621007049/278348544
      */
-    public function makeOutcomePay()
+    public function makeOutcomePay(float  $amount, int $charging_fees_method, string $recipient_bank_code, int $recipient_account_type,
+                                   string $recipient_account, string $recipient_account_name, string $email, string $phone, string $identity_type, string $identity_number, ?string $notify_url, string $transfer_desc
+    )
     {
         $url = '/gateway/v1.0/cashOut/submit';
         $params = [
-            "partner_trx_id" => $orderSn=self::makeOrder(),
-            "amount" => 10000,
-            "charging_fees_method" => 1,
-            "recipient_bank_code" => "1007",
-            "recipient_account_type" => 0,
-            "recipient_account" => "5414515151",
-            "recipient_account_name" => "Jack Test",
-            "email" => "test@gmail.com",
-            "phone" => "3211234567",
-            "identity_type" => "CC",
-            "identity_number" => "3215545610",
+            "partner_trx_id" => $orderSn = self::makeOrder(),
+            "amount" => sprintf('%.2f', $amount),
+            "charging_fees_method" => $charging_fees_method,
+            "recipient_bank_code" => $recipient_bank_code,
+            "recipient_account_type" => $recipient_account_type,
+            "recipient_account" => $recipient_account,
+            "recipient_account_name" => $recipient_account_name,
+            "email" => $email,
+            "phone" => $phone,
+            "identity_type" => $identity_type,
+            "identity_number" => $identity_number,
             "notify_url" => $this->outcomeNotifyUrl,
-            "transfer_desc" => "Test Transfer"
+            "transfer_desc" => $transfer_desc ?? ''
         ];
 
+
         $sign = $this->generateSign($url, $params);
+
         $headers = [
             'Content-Type: application/json',
             'X-TIMESTAMP: ' . $sign['timestamp'],
@@ -430,18 +473,21 @@ class GelunPayService
             'X-SIGNATURE: ' . $sign['sign'],
         ];
         $data = $this->request($url, $params, $headers);
-        if (self::$env=='dev'){
-            $this->modeNotify($orderSn,'CASH');
+        if (self::$env == 'dev') {
+            $this->modeNotify($orderSn, 'CASH');
         }
         return $data;
     }
 
     /**
      * 查询汇款单状态
-     * @param string $orderSn
+     * @param string $orderSn 订单号 '562b640985bbf4fb7363952a62e54125'
      * @return array|mixed|string[]
+     * @author yanglong
+     * @time 2024年2月27日09:44:36
+     * @link https://docs-co.eastpay.top/web/#/621007049/278348546
      */
-    public function queryOutcomeOrder(string $orderSn = '562b640985bbf4fb7363952a62e54125')
+    public function queryOutcomeOrder(string $orderSn)
     {
         $url = '/gateway/v1.0/cashOut/inquiry';
         $params = [
@@ -458,15 +504,18 @@ class GelunPayService
     }
 }
 
-/** 测试 */
-$class = new GelunPayService();
-
-print_r($incomeOrder = $class->createIncomePay());
-
-//print_r($class->queryIncomeOrder());
-//print_r($class->makeOutcomePay());
-//print_r($class->queryOutcomeOrder());
+$class = new GelunPayService2();
 
 
+//print_r($class->makeOutcomePay(10000.00,1,
+//    "1007",0,
+//    "5414515151","Jack Test",
+//    "test@gmail.com","3211234567","CC",
+//    "3215545610",'https://378d0a5c.r23.cpolar.top/income-notify',"Test Transfer"));
+//print_r($class->queryOutcomeOrder('c3d90e9dadfb9b3881daae5fd1a6bbef'));
 
 
+//print_r($incomeOrder = $class->createIncomePay('Pse',199.88,'Jack Test','test@gmail.com','3211234567',
+//    'CC','3215545610','2024-12-21 18:00:00','https://378d0a5c.r23.cpolar.top/income-notify','Test pay'));
+
+print_r($class->queryIncomeOrder('6a700d64215aa3eaf94f62b2f25520bb'));
