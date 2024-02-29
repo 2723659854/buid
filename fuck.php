@@ -302,7 +302,7 @@ class GelunPayService2
      * @param string $identity_type 客户证件号类型 'CC'
      * @param string $identity_number 客户证件号 '3215545610'
      * @param string $expiry_time 过期时间，形如：yyyy-MM-dd HH:mm:ss '2024-12-21 18:00:00'
-     * @param string|null 付款成功通知地址 $notify_url
+     * @param string|null $notify_url 付款成功通知地址
      * @param string $product_desc 商品描述 'Test pay'
      * @return array|mixed|string[]
      * @author yanglong
@@ -507,15 +507,16 @@ class GelunPayService2
 $class = new GelunPayService2();
 
 
-//print_r($class->makeOutcomePay(10000.00,1,
-//    "1007",0,
-//    "5414515151","Jack Test",
-//    "test@gmail.com","3211234567","CC",
-//    "3215545610",'https://378d0a5c.r23.cpolar.top/income-notify',"Test Transfer"));
+print_r($class->makeOutcomePay(10000.00,1,
+    "1007",0,
+    "5414515151","Jack Test",
+    "test@gmail.com","3211234567","CC",
+    "3215545610",'https://378d0a5c.r23.cpolar.top/income-notify',"Test Transfer"));
+
 //print_r($class->queryOutcomeOrder('c3d90e9dadfb9b3881daae5fd1a6bbef'));
 
 
 //print_r($incomeOrder = $class->createIncomePay('Pse',199.88,'Jack Test','test@gmail.com','3211234567',
 //    'CC','3215545610','2024-12-21 18:00:00','https://378d0a5c.r23.cpolar.top/income-notify','Test pay'));
 
-print_r($class->queryIncomeOrder('6a700d64215aa3eaf94f62b2f25520bb'));
+//print_r($class->queryIncomeOrder('6a700d64215aa3eaf94f62b2f25520bb'));
